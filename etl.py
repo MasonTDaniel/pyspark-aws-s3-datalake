@@ -30,6 +30,7 @@ def process_song_data(spark, input_directory, output_directory):
             output_directory = path to dimensional tables stored in parquet format
     """
    
+    # Process the 'song' json data
     song_data = input_directory + "song_data/*.json"
    
     df = spark.read.json(song_data).dropDuplicates()
@@ -37,25 +38,28 @@ def process_song_data(spark, input_directory, output_directory):
     songs_table = df.select(['song_id', 'title', 'artist_id', 'year', 'duration'])
     
     songs_table.write.mode('overwrite').partitionBy('year', 'artist_id').parquet(output_directory + "/Songs/songs_table.parquet")
+    
+    # Process the 'artist' json data
 
     artists_table = df.select(['artist_id', 'artist_name', 'artist_location', 'artist_latitude', 'artist_longitude'])
     
     artists_table.write.mode("overwrite").parquet(output_directory + "/Artists/artist_data.parquet")
     
+    # Create a temp table based on songs_table that will be used to determine song plays later
     df.createOrReplaceTempView("song_df_table")
     
 
-def process_log_data(spark, input_data, output_directory):
+def process_log_data(spark, input_directory, output_directory):
     """
         Description: This function loads log_data from and to S3 by extracting both songs and artists tables, processing them and loading back to S3.
         
         Parameters:
             spark = spark session
-            input_data = path to song_data json file with metadata
-            output_data = path to dimensional tables stored in parquet format     
+            input_directory = path to the raw json files
+            output_directory = path to the designated output directory     
     """
     
-    log_data = input_data + "log_data/*/*/*.json"
+    log_data = input_directory + "log_data/*.json"
 
     df = spark.read.json(log_data).dropDuplicates()
 
@@ -88,22 +92,6 @@ def process_log_data(spark, input_data, output_directory):
     
     time_table.write.partitionBy("year", "month").mode("overwrite").parquet(output_directory + "/Time/time_data.parquet")
 
-    song_df = spark.sql("SELECT DISTINCT song_id, artist_id, artist_name, duration, title FROM song_df_table")
-    df.createOrReplaceTempView('log_table')
-    song_df.createOrReplaceTempView('song_table')
-
-    songplays_table = spark.sql("""select row_number() over (order by log_table.start_time) as songplay_id, \
-                                                        log_table.start_time, year(log_table.start_time) year, \
-                                                        month(log_table.start_time) month, log_table.userId as user_id, \
-                                                        log_table.level, song_table.song_id, song_table.artist_id, \
-                                                        log_table.sessionId as session_id, log_table.location, \
-                                                        log_table.userAgent as user_agent \
-                                                        from log_table \
-                                                        join song_table on (log_table.artist = song_table.artist_name and \
-                                                        log_table.song = song_table.title and log_table.length = song_table.duration )""")
-
-    songplays_table.write.partitionBy("year", "month").mode("overwrite").parquet("data/output_directory/songplays.parquet")
-
 
 def main():
     """
@@ -111,8 +99,8 @@ def main():
     """
     
     spark = create_spark_session()
-    input_directory = "s3a://udacity-dend/"
-    output_directory = "s3a://udacity-s3datalakeproject"
+    input_directory = "s3a://udacity-datalake/"
+    output_directory = "s3a://udacity-datawarehouse/"
     
     process_song_data(spark, input_directory, output_directory)    
     process_log_data(spark, input_data, output_directory)
