@@ -20,32 +20,32 @@ def create_spark_session():
     return spark
 
 
-def process_song_data(spark, input_data, output_data):
+def process_song_data(spark, input_directory, output_directory):
     """
         Description: Process the song_data and make songs table and artists table.
     
         Parameters:
             spark = spark session
-            input_data = path to song_data json file with metadata
-            output_data = path to dimensional tables stored in parquet format
+            input_directory = path to song_data json file with metadata
+            output_directory = path to dimensional tables stored in parquet format
     """
    
-    song_data = input_data + "song_data/A/A/A/*.json"
+    song_data = input_directory + "song_data/*.json"
    
     df = spark.read.json(song_data).dropDuplicates()
 
     songs_table = df.select(['song_id', 'title', 'artist_id', 'year', 'duration'])
     
-    songs_table.write.mode('overwrite').partitionBy('year', 'artist_id').parquet(output_data + "/Songs/songs_table.parquet")
+    songs_table.write.mode('overwrite').partitionBy('year', 'artist_id').parquet(output_directory + "/Songs/songs_table.parquet")
 
     artists_table = df.select(['artist_id', 'artist_name', 'artist_location', 'artist_latitude', 'artist_longitude'])
     
-    artists_table.write.mode("overwrite").parquet(output_data + "/Artists/artist_data.parquet")
+    artists_table.write.mode("overwrite").parquet(output_directory + "/Artists/artist_data.parquet")
     
     df.createOrReplaceTempView("song_df_table")
     
 
-def process_log_data(spark, input_data, output_data):
+def process_log_data(spark, input_data, output_directory):
     """
         Description: This function loads log_data from and to S3 by extracting both songs and artists tables, processing them and loading back to S3.
         
@@ -68,7 +68,7 @@ def process_log_data(spark, input_data, output_data):
                               df.gender, \
                               df.level]).distinct()
     
-    users_table.write.mode("overwrite").parquet(output_data + "/Users/users_data.parquet")
+    users_table.write.mode("overwrite").parquet(output_directory + "/Users/users_data.parquet")
 
     get_datetime = udf(lambda x : datetime.fromtimestamp(x/1000), TimestampType())
     df = df.withColumn("timestamp", get_datetime(col("ts")))
@@ -86,7 +86,7 @@ def process_log_data(spark, input_data, output_data):
     time_table = df.select(col("start_time"), col("hour"),col("day"), \
     col("week"),col("month"),col("year"),col("weekday")).distinct()
     
-    time_table.write.partitionBy("year", "month").mode("overwrite").parquet(output_data + "/Time/time_data.parquet")
+    time_table.write.partitionBy("year", "month").mode("overwrite").parquet(output_directory + "/Time/time_data.parquet")
 
     song_df = spark.sql("SELECT DISTINCT song_id, artist_id, artist_name, duration, title FROM song_df_table")
     df.createOrReplaceTempView('log_table')
@@ -102,7 +102,7 @@ def process_log_data(spark, input_data, output_data):
                                                         join song_table on (log_table.artist = song_table.artist_name and \
                                                         log_table.song = song_table.title and log_table.length = song_table.duration )""")
 
-    songplays_table.write.partitionBy("year", "month").mode("overwrite").parquet("data/output_data/songplays.parquet")
+    songplays_table.write.partitionBy("year", "month").mode("overwrite").parquet("data/output_directory/songplays.parquet")
 
 
 def main():
@@ -111,11 +111,11 @@ def main():
     """
     
     spark = create_spark_session()
-    input_data = "s3a://udacity-dend/"
-    output_data = "s3a://udacity-s3datalakeproject"
+    input_directory = "s3a://udacity-dend/"
+    output_directory = "s3a://udacity-s3datalakeproject"
     
-    process_song_data(spark, input_data, output_data)    
-    process_log_data(spark, input_data, output_data)
+    process_song_data(spark, input_directory, output_directory)    
+    process_log_data(spark, input_data, output_directory)
 
 
 if __name__ == "__main__":
