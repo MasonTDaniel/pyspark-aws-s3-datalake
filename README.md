@@ -4,6 +4,7 @@ Problem provided by Udacity
 ## Table of Contents
 * [Use Case](#use-case)
 * [Requirements](#requirements)
+* [Given Information](#given_information)
 * [Solution](#solution)
 * [Results](#results)
 * [Technology and Libraries](#technology-and-libraries)
@@ -24,6 +25,9 @@ A new start-up, Sparkify, currently has raw data stored in an Amazon S3 datalake
     - table should be partitioned by *year* and *month*
   - Users
     - must contain the following columns: *user_id*, *first_name*, *last_name*, *df.gender*, *df.level*
+
+## Given Information
+An example of the raw input data can be found in the **raw_data** folder
 
 ## Solution
 
