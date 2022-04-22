@@ -1,7 +1,7 @@
 # pyspark-aws-s3-datalake
 Problem provided by Udacity
 
->The goal of this project is to load json data from S3, process the data into analytics tables using Spark, and load them back into S3 as parquet files
+>The goal of this project is to load json data from S3, process the data into a Dataset using Spark, and load them back into S3 as parquet files
 >as a set of partitioned tables in order to allow >the analytics team to draw insights in what songs users are listening to.
 
 ## Table of Contents
@@ -26,6 +26,4 @@ Fig.5: Sample `users_data.parquet/` data loaded back into S3
 
 ## Technology and Libraries
 * Jupyter - version 1.0.9
-* configparser
 * pyspark
-* datetime
