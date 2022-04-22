@@ -13,7 +13,7 @@ Problem provided by Udacity
 A new start-up, Sparkify, currently has raw data stored in an Amazon S3 datalake. In order for the Data Analytics team to provide insights to the Business Team from the data, it must first be cleaned, partitioned, and moved. The Data Analytics team has given explicit requirements (see below) as to how they would like the data to be structured, in order for them to use the data effectively.
 
 ## Requirements
-- The data must be of parquet format
+- The output data must be of parquet format
 - The data must be placed into 4 tables, with separate requirements for each tables:
   - Artists 
     - must contain the following columns: *artist_id*, *artist_name*, *artist_location*, *artist_latitude*, *artist_longitude*
